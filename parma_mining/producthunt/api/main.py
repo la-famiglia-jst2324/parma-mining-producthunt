@@ -1,4 +1,5 @@
 """Main entrypoint for the API routes in of parma-analytics."""
+import logging
 
 from fastapi import FastAPI, status
 
@@ -9,6 +10,10 @@ from parma_mining.producthunt.model import (
 )
 from parma_mining.producthunt.scraper import ProductHuntScraper
 
+logging.basicConfig(level=logging.INFO)
+
+logger = logging.getLogger(__name__)
+
 app = FastAPI()
 
 producthunt_scraper = ProductHuntScraper()
@@ -17,6 +22,7 @@ producthunt_scraper = ProductHuntScraper()
 @app.get("/", status_code=status.HTTP_200_OK)
 def root():
     """Root endpoint for the API."""
+    logger.debug("Root endpoint called")
     return {"welcome": "at parma-mining-producthunt"}
 
 
@@ -26,6 +32,7 @@ def root():
 )
 def get_company_details(companies: CompaniesRequest):
     """Endpoint to get product data based on a dict with the respective urls."""
+    logger.debug("Companies endpoint called")
     for company_id, company_data in companies.companies.items():
         for data_type, handles in company_data.items():
             for handle in handles:
@@ -46,5 +53,6 @@ def get_company_details(companies: CompaniesRequest):
 )
 def discover_products(query: str):
     """Discovery endpoint that returns the top products matching the query."""
+    logger.debug("Discovery endpoint called")
     companies = producthunt_scraper.query_company_top_products(query)
     return companies

@@ -35,6 +35,10 @@ resource "google_cloud_run_service" "parma_mining_producthunt_cloud_run" {
         ports {
           container_port = 8080
         }
+        env {
+          name  = "ANALYTICS_BASE_URL"
+          value = var.ANALYTICS_BASE_URL
+        }
       }
     }
   }
