@@ -16,6 +16,7 @@ dependencies:
   # Testing
   - pytest >=6 # --import-mode option
   - pytest-cov
+  - pytest-mock
   # Dependencies (core)
   - fastapi >=0.104.0
   - polars >=0.19.0
@@ -25,3 +26,4 @@ dependencies:
   - uvicorn >=0.23.2
   - bs4
   - httpx
+  - python-dotenv>=1.0.0

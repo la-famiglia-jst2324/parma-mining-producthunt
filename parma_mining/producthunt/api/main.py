@@ -1,13 +1,16 @@
 """Main entrypoint for the API routes in of parma-analytics."""
+import json
 import logging
 
 from fastapi import FastAPI, status
 
+from parma_mining.producthunt.analytics_client import AnalyticsClient
 from parma_mining.producthunt.model import (
     CompaniesRequest,
     DiscoveryModel,
     ResponseModel,
 )
+from parma_mining.producthunt.normalization_map import ProductHuntNormalizationMap
 from parma_mining.producthunt.scraper import ProductHuntScraper
 
 logging.basicConfig(level=logging.INFO)
@@ -17,6 +20,8 @@ logger = logging.getLogger(__name__)
 app = FastAPI()
 
 producthunt_scraper = ProductHuntScraper()
+normalization = ProductHuntNormalizationMap()
+analytics_client = AnalyticsClient()
 
 
 @app.get("/", status_code=status.HTTP_200_OK)
@@ -24,6 +29,24 @@ def root():
     """Root endpoint for the API."""
     logger.debug("Root endpoint called")
     return {"welcome": "at parma-mining-producthunt"}
+
+
+@app.get("/initialize", status_code=status.HTTP_200_OK)
+def initialize(source_id: int) -> str:
+    """Initialization endpoint for the API."""
+    # init frequency
+    time = "weekly"
+    normalization_map = normalization.get_normalization_map()
+    # register the measurements to analytics
+    analytics_client.register_measurements(
+        normalization_map, source_module_id=source_id
+    )
+
+    # set and return results
+    results = {}
+    results["frequency"] = time
+    results["normalization_map"] = str(normalization_map)
+    return json.dumps(results)
 
 
 @app.post(
@@ -43,7 +66,15 @@ def get_company_details(companies: CompaniesRequest):
                         company_id=company_id,
                         raw_data=scraped_data,
                     )
-                    return response_data
+                    # Write data to db via endpoint in analytics backend
+                    try:
+                        analytics_client.feed_raw_data(response_data)
+                    except Exception:
+                        print("Error writing to db")
+                else:
+                    # To be included in logging
+                    print("Unsupported type error")
+                return "done"
 
 
 @app.get(
