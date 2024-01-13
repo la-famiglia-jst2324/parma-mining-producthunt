@@ -2,7 +2,9 @@
 import logging
 import os
 
-from fastapi import FastAPI, status
+from fastapi import Depends, FastAPI, status
+
+from parma_mining.producthunt.api.dependencies.auth import authenticate
 
 env = os.getenv("env", "local")
 
@@ -23,4 +25,16 @@ app = FastAPI()
 def root():
     """Root endpoint for the API."""
     logger.debug("Root endpoint called")
+    return {"welcome": "at parma-mining-producthunt"}
+
+
+@app.get("/dummy-auth", status_code=status.HTTP_200_OK)
+def dummy_auth(token: str = Depends(authenticate)):
+    """Dummy endpoint.
+
+    This endpoint is used to demonstrate the usage of authenticate function. This
+    function ensures that the incoming request comes from the analytics. token variable
+    can be used to make requests to analytics.
+    """
+    logger.debug("Dummy endpoint called")
     return {"welcome": "at parma-mining-producthunt"}
