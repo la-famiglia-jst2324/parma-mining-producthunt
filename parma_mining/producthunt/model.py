@@ -1,4 +1,5 @@
 """Model for the ProductHunt data."""
+from datetime import datetime
 
 from pydantic import BaseModel
 
@@ -9,11 +10,25 @@ class CompaniesRequest(BaseModel):
     companies: dict[str, dict[str, list[str]]]
 
 
-class DiscoveryModel(BaseModel):
-    """Discovery model for ProductHunt data."""
+class DiscoveryRequest(BaseModel):
+    """Discovery request."""
 
-    name: str | None
-    url: str | None
+    company_id: str
+    name: str
+
+
+class DiscoveryModel(BaseModel):
+    """Model for discovery."""
+
+    name: str
+    url: str
+
+
+class FinalDiscoveryResponse(BaseModel):
+    """Discovery response model."""
+
+    identifiers: dict[str, list[DiscoveryModel]]
+    validity: datetime
 
 
 class Review(BaseModel):

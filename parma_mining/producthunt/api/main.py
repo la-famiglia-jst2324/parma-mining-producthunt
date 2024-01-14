@@ -1,13 +1,15 @@
 """Main entrypoint for the API routes in of parma-analytics."""
 import json
 import logging
+from datetime import datetime, timedelta
 
-from fastapi import FastAPI, status
+from fastapi import FastAPI, HTTPException, status
 
 from parma_mining.producthunt.analytics_client import AnalyticsClient
 from parma_mining.producthunt.model import (
     CompaniesRequest,
-    DiscoveryModel,
+    DiscoveryRequest,
+    FinalDiscoveryResponse,
     ResponseModel,
 )
 from parma_mining.producthunt.normalization_map import ProductHuntNormalizationMap
@@ -77,13 +79,27 @@ def get_company_details(companies: CompaniesRequest):
                 return "done"
 
 
-@app.get(
+@app.post(
     "/discover",
-    response_model=list[DiscoveryModel],
+    response_model=FinalDiscoveryResponse,
     status_code=status.HTTP_200_OK,
 )
-def discover_products(query: str):
-    """Discovery endpoint that returns the top products matching the query."""
-    logger.debug("Discovery endpoint called")
-    companies = producthunt_scraper.query_company_top_products(query)
-    return companies
+def discover_companies(request: list[DiscoveryRequest]):
+    """Endpoint to discover products based on provided names."""
+    if not request:
+        raise HTTPException(
+            status_code=400, detail="Request body cannot be empty for discovery"
+        )
+
+    response_data = {}
+    for company in request:
+        logging.debug(
+            f"Discovering with name: {company.name} for company_id {company.company_id}"
+        )
+        products = producthunt_scraper.query_company_top_products(company.name)
+        response_data[company.company_id] = products
+
+    current_date = datetime.now()
+    valid_until = current_date + timedelta(days=180)
+
+    return FinalDiscoveryResponse(identifiers=response_data, validity=valid_until)

@@ -29,7 +29,7 @@ class ProductHuntScraper:
             soup = BeautifulSoup(response.content, "html.parser")
 
             products = []
-            product_cut_off = 5
+            product_cut_off = 1
             product_name_divs = soup.find_all("div", {"data-test": "product-item-name"})
 
             for div in product_name_divs:
@@ -87,13 +87,10 @@ class ProductHuntScraper:
         followers_div = soup.find("div", class_="styles_count___6_8F")
         if followers_div:
             followers_text = followers_div.get_text(strip=True)
-            print(followers_text)
             followers_match = re.search(r"(\d+(?:\.\d+)?)\s?[Kk]?", followers_text)
-            print(followers_match)
             if followers_match:
                 followers_str = followers_match.group(1)
                 followers_count = float(followers_str)
-                print(followers_count)
 
                 if "K" in followers_text or "k" in followers_text:
                     followers_count *= 1000  # Convert thousands to actual number
@@ -111,6 +108,8 @@ class ProductHuntScraper:
 
             soup = BeautifulSoup(response.content, "html.parser")
             review_soup = BeautifulSoup(review_page_response.content, "html.parser")
+
+            self.logger.debug(f"Retrieving data from: {url}")
 
             product_info_data = {
                 "name": self._extract_product_name(soup),
