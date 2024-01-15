@@ -24,7 +24,7 @@ class DiscoveryModel(BaseModel):
     url: str
 
 
-class FinalDiscoveryResponse(BaseModel):
+class DiscoveryResponse(BaseModel):
     """Discovery response model."""
 
     identifiers: dict[str, list[DiscoveryModel]]
@@ -43,8 +43,8 @@ class ProductInfo(BaseModel):
 
     name: str | None
     overall_rating: float | None
-    review_count: int
-    followers: int
+    review_count: int | None
+    followers: int | None
     reviews: list[Review]
 
 

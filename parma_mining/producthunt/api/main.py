@@ -4,14 +4,15 @@ import logging
 import os
 from datetime import datetime, timedelta
 
-from fastapi import Depends, FastAPI, HTTPException, status
+from fastapi import Depends, FastAPI, status
 
+from parma_mining.mining_common.exceptions import ClientInvalidBodyError
 from parma_mining.producthunt.analytics_client import AnalyticsClient
 from parma_mining.producthunt.api.dependencies.auth import authenticate
 from parma_mining.producthunt.model import (
     CompaniesRequest,
     DiscoveryRequest,
-    FinalDiscoveryResponse,
+    DiscoveryResponse,
     ResponseModel,
 )
 from parma_mining.producthunt.normalization_map import ProductHuntNormalizationMap
@@ -103,25 +104,25 @@ def get_company_details(companies: CompaniesRequest):
 
 @app.post(
     "/discover",
-    response_model=FinalDiscoveryResponse,
+    response_model=DiscoveryResponse,
     status_code=status.HTTP_200_OK,
 )
 def discover_companies(request: list[DiscoveryRequest]):
     """Endpoint to discover products based on provided names."""
     if not request:
-        raise HTTPException(
-            status_code=400, detail="Request body cannot be empty for discovery"
-        )
+        msg = "Request body cannot be empty for discovery"
+        logger.error(msg)
+        raise ClientInvalidBodyError(msg)
 
     response_data = {}
     for company in request:
-        logging.debug(
+        logger.debug(
             f"Discovering with name: {company.name} for company_id {company.company_id}"
         )
-        products = producthunt_scraper.query_company_top_products(company.name)
+        products = producthunt_scraper.search_organizations(company.name)
         response_data[company.company_id] = products
 
     current_date = datetime.now()
     valid_until = current_date + timedelta(days=180)
 
-    return FinalDiscoveryResponse(identifiers=response_data, validity=valid_until)
+    return DiscoveryResponse(identifiers=response_data, validity=valid_until)

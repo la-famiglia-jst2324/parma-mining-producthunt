@@ -17,7 +17,7 @@ class ProductHuntScraper:
         self.base_url = "https://www.producthunt.com/"
         self.logger = logging.getLogger(__name__)
 
-    def query_company_top_products(self, company_name: str) -> list:
+    def search_organizations(self, company_name: str) -> list:
         """Get links of products by company name."""
         search_url = self.base_url + "search"
         params = {"q": company_name}
