@@ -54,3 +54,17 @@ class ResponseModel(BaseModel):
     source_name: str
     company_id: str
     raw_data: ProductInfo
+
+
+class ErrorInfoModel(BaseModel):
+    """Error info for the crawling_finished endpoint."""
+
+    error_type: str
+    error_description: str | None
+
+
+class CrawlingFinishedInputModel(BaseModel):
+    """Internal base model for the crawling_finished endpoints."""
+
+    task_id: int
+    errors: dict[str, ErrorInfoModel] | None = None
