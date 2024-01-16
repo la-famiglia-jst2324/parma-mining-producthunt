@@ -9,6 +9,57 @@ from bs4 import BeautifulSoup
 from parma_mining.producthunt.model import ProductInfo
 
 
+def _extract_product_name(soup: BeautifulSoup) -> str | None:
+    product_name_div = soup.find("h1", class_="color-darker-grey")
+    return product_name_div.get_text(strip=True) if product_name_div else None
+
+
+def _extract_overall_rating(soup: BeautifulSoup) -> float | None:
+    overall_rating_div = soup.find("div", class_="styles_reviewPositive__JY_9N")
+    rating = (
+        overall_rating_div.get_text(strip=True).split("/")[0]
+        if overall_rating_div
+        else None
+    )
+    return float(rating)
+
+
+def _extract_reviews(soup: BeautifulSoup) -> list:
+    reviews = []
+    for review_div in soup.find_all(
+        "div",
+        class_="flex direction-column",
+        id=lambda x: x and x.startswith("review-"),
+    ):
+        review_text_div = review_div.find("div", class_="styles_htmlText__iftLe")
+        review_text = review_text_div.get_text(strip=True) if review_text_div else None
+        time_tag = review_div.find("time")
+        review_date = (
+            datetime.fromisoformat(time_tag["datetime"]).strftime("%Y-%m-%d %H:%M:%S")
+            if time_tag
+            else None
+        )
+        reviews.append({"text": review_text, "date": review_date})
+    return reviews
+
+
+def _extract_followers(soup: BeautifulSoup) -> int:
+    followers_div = soup.find("div", class_="styles_count___6_8F")
+    if followers_div:
+        followers_text = followers_div.get_text(strip=True)
+        followers_match = re.search(r"(\d+(?:\.\d+)?)\s?[Kk]?", followers_text)
+        if followers_match:
+            followers_str = followers_match.group(1)
+            followers_count = float(followers_str)
+
+            if "K" in followers_text or "k" in followers_text:
+                followers_count *= 1000  # Convert thousands to actual number
+
+            return int(followers_count)
+
+    return 0
+
+
 class ProductHuntScraper:
     """ProductHuntScraper class is used to fetch data from Product Hunt."""
 
@@ -48,75 +99,28 @@ class ProductHuntScraper:
             self.logger.error(f"Failed to query company products: {e}")
             return []
 
-    def _extract_overall_rating(self, soup: BeautifulSoup) -> float | None:
-        overall_rating_div = soup.find("div", class_="styles_reviewPositive__JY_9N")
-        rating = (
-            overall_rating_div.get_text(strip=True).split("/")[0]
-            if overall_rating_div
-            else None
-        )
-        return float(rating)
-
-    def _extract_product_name(self, soup: BeautifulSoup) -> str | None:
-        product_name_div = soup.find("h1", class_="color-darker-grey")
-        return product_name_div.get_text(strip=True) if product_name_div else None
-
-    def _extract_reviews(self, soup: BeautifulSoup) -> list:
-        reviews = []
-        for review_div in soup.find_all(
-            "div",
-            class_="flex direction-column",
-            id=lambda x: x and x.startswith("review-"),
-        ):
-            review_text_div = review_div.find("div", class_="styles_htmlText__iftLe")
-            review_text = (
-                review_text_div.get_text(strip=True) if review_text_div else None
-            )
-            time_tag = review_div.find("time")
-            review_date = (
-                datetime.fromisoformat(time_tag["datetime"]).strftime(
-                    "%Y-%m-%d %H:%M:%S"
-                )
-                if time_tag
-                else None
-            )
-            reviews.append({"text": review_text, "date": review_date})
-        return reviews
-
-    def _extract_followers(self, soup: BeautifulSoup) -> int:
-        followers_div = soup.find("div", class_="styles_count___6_8F")
-        if followers_div:
-            followers_text = followers_div.get_text(strip=True)
-            followers_match = re.search(r"(\d+(?:\.\d+)?)\s?[Kk]?", followers_text)
-            if followers_match:
-                followers_str = followers_match.group(1)
-                followers_count = float(followers_str)
-
-                if "K" in followers_text or "k" in followers_text:
-                    followers_count *= 1000  # Convert thousands to actual number
-
-                return int(followers_count)
-
-        return 0
+    def _get_html_content(self, url: str) -> str:
+        with httpx.Client() as client:
+            response = client.get(url)
+        return response.content
 
     def scrape_product_page(self, url: str) -> ProductInfo:
         """Get Product data with link of product page."""
         try:
-            with httpx.Client() as client:
-                response = client.get(url)
-                review_page_response = client.get(url + "/reviews?order=LATEST")
+            product_page_content = self._get_html_content(url)
+            review_page_content = self._get_html_content(url + "/reviews?order=LATEST")
 
-            soup = BeautifulSoup(response.content, "html.parser")
-            review_soup = BeautifulSoup(review_page_response.content, "html.parser")
+            soup = BeautifulSoup(product_page_content, "html.parser")
+            review_soup = BeautifulSoup(review_page_content, "html.parser")
 
             self.logger.debug(f"Retrieving data from: {url}")
 
             product_info_data = {
-                "name": self._extract_product_name(soup),
-                "overall_rating": self._extract_overall_rating(review_soup),
-                "review_count": len(self._extract_reviews(review_soup)),
-                "followers": self._extract_followers(soup),
-                "reviews": self._extract_reviews(review_soup),
+                "name": _extract_product_name(soup),
+                "overall_rating": _extract_overall_rating(review_soup),
+                "review_count": len(_extract_reviews(review_soup)),
+                "followers": _extract_followers(soup),
+                "reviews": _extract_reviews(review_soup),
             }
             return ProductInfo(**product_info_data)
         except Exception as e:

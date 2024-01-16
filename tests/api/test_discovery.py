@@ -4,11 +4,11 @@ import pytest
 from fastapi.testclient import TestClient
 
 from parma_mining.mining_common.const import HTTP_200, HTTP_422
+from parma_mining.mining_common.exceptions import ClientInvalidBodyError
 from parma_mining.producthunt.api.dependencies.auth import authenticate
 from parma_mining.producthunt.api.main import app
 from parma_mining.producthunt.model import (  # Replace with your actual models
     DiscoveryRequest,
-    DiscoveryResponse,
 )
 from tests.dependencies.mock_auth import mock_authenticate  # Adjust import as needed
 
@@ -30,7 +30,7 @@ def mock_producthunt_client(mocker) -> MagicMock:
     mock = mocker.patch(
         "parma_mining.producthunt.api.main.ProductHuntScraper.search_organizations"
     )
-    mock.return_value = DiscoveryResponse(handles=["mock_handle"]).model_dump()
+    mock.return_value = [{"name": "mock_handle", "url": "https://example.com"}]
     return mock
 
 
@@ -53,10 +53,9 @@ def test_discover_endpoint_success(
 
 # Test for an empty request body
 def test_discover_endpoint_empty_request(client: TestClient):
-    response = client.post("/discover", json=[])
-    assert (
-        response.status_code == HTTP_422
-    )  # Assuming the response code for empty request
+    with pytest.raises(ClientInvalidBodyError) as exc_info:
+        client.post("/discover", json=[])
+    assert "Request body cannot be empty for discovery" in str(exc_info.value)
 
 
 # Test for an invalid request format
