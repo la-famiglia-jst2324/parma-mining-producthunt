@@ -11,9 +11,9 @@ from parma_mining.mining_common.exceptions import (
     ClientInvalidBodyError,
     CrawlingError,
 )
+from parma_mining.mining_common.helper import collect_errors
 from parma_mining.producthunt.analytics_client import AnalyticsClient
 from parma_mining.producthunt.api.dependencies.auth import authenticate
-from parma_mining.producthunt.helper import collect_errors
 from parma_mining.producthunt.model import (
     CompaniesRequest,
     CrawlingFinishedInputModel,
@@ -25,7 +25,7 @@ from parma_mining.producthunt.model import (
 from parma_mining.producthunt.normalization_map import ProductHuntNormalizationMap
 from parma_mining.producthunt.scraper import ProductHuntScraper
 
-env = os.getenv("env", "local")
+env = os.getenv("DEPLOYMENT_ENV", "local")
 
 if env == "prod":
     logging.basicConfig(level=logging.INFO)
