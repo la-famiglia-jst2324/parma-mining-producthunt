@@ -25,20 +25,16 @@ def test_updated_model_dump(product_data):
         Review(**review_data) for review_data in product_data["reviews"]
     ]
 
-    # Create an instance of ProductInfo
     product_info = ProductInfo(**product_data)
 
-    # Serialize the ProductInfo instance
     dumped_json = product_info.updated_model_dump()
     dumped_dict = json.loads(dumped_json)
 
-    # Check non-list fields
     assert dumped_dict["name"] == product_data["name"]
     assert dumped_dict["overall_rating"] == product_data["overall_rating"]
     assert dumped_dict["review_count"] == product_data["review_count"]
     assert dumped_dict["followers"] == product_data["followers"]
 
-    # Check the reviews
     for i, review in enumerate(dumped_dict["reviews"]):
         assert review["text"] == product_data["reviews"][i].text
         assert review["date"] == product_data["reviews"][i].date
