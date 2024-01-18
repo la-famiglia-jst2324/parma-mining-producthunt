@@ -5,7 +5,7 @@ from fastapi.testclient import TestClient
 
 from parma_mining.producthunt.api.main import app
 from parma_mining.producthunt.model import ProductInfo
-from parma_mining.producthunt.scraper import ProductHuntScraper
+from parma_mining.producthunt.ph_client import ProductHuntClient
 
 
 @pytest.fixture
@@ -21,7 +21,7 @@ def mock_response(content):
 
 def test_scrape_product_page_failure():
     with patch("httpx.Client.get", side_effect=Exception("Mocked Exception")):
-        scraper = ProductHuntScraper()
+        scraper = ProductHuntClient()
         result = scraper.scrape_product_page(
             "https://www.producthunt.com/products/testproduct"
         )

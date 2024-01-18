@@ -16,14 +16,13 @@ from parma_mining.producthunt.analytics_client import AnalyticsClient
 from parma_mining.producthunt.api.dependencies.auth import authenticate
 from parma_mining.producthunt.model import (
     CompaniesRequest,
-    CrawlingFinishedInputModel,
     DiscoveryRequest,
     DiscoveryResponse,
     ErrorInfoModel,
     ResponseModel,
 )
 from parma_mining.producthunt.normalization_map import ProductHuntNormalizationMap
-from parma_mining.producthunt.scraper import ProductHuntScraper
+from parma_mining.producthunt.ph_client import ProductHuntClient
 
 env = os.getenv("DEPLOYMENT_ENV", "local")
 
@@ -39,7 +38,7 @@ logger = logging.getLogger(__name__)
 
 app = FastAPI()
 
-producthunt_scraper = ProductHuntScraper()
+producthunt_scraper = ProductHuntClient()
 normalization = ProductHuntNormalizationMap()
 analytics_client = AnalyticsClient()
 
@@ -85,14 +84,13 @@ def initialize(source_id: int, token: str = Depends(authenticate)) -> str:
     "/companies",
     status_code=status.HTTP_200_OK,
 )
-def get_company_details(body: CompaniesRequest, token: str = Depends(authenticate)):
+def get_company_details(body: CompaniesRequest):
     """Endpoint to get product data based on a dict with the respective urls."""
     errors: dict[str, ErrorInfoModel] = {}
-    logger.debug("Companies endpoint called")
     for company_id, company_data in body.companies.items():
         for data_type, handles in company_data.items():
             for handle in handles:
-                if data_type == "url":
+                if data_type == "producthunt_url":
                     try:
                         scraped_data = producthunt_scraper.scrape_product_page(handle)
                     except CrawlingError as e:
@@ -109,7 +107,8 @@ def get_company_details(body: CompaniesRequest, token: str = Depends(authenticat
                     )
                     # Write data to db via endpoint in analytics backend
                     try:
-                        analytics_client.feed_raw_data(token, data)
+                        return data
+                        # analytics_client.feed_raw_data(token, data)
                     except AnalyticsError as e:
                         logger.error(
                             f"Can't send crawling data to the Analytics. Error: {e}"
@@ -120,14 +119,14 @@ def get_company_details(body: CompaniesRequest, token: str = Depends(authenticat
                     msg = f"Unsupported type error for {data_type} in {handle}"
                     logger.error(msg)
                     collect_errors(company_id, errors, ClientInvalidBodyError(msg))
-    return analytics_client.crawling_finished(
-        token,
-        json.loads(
-            CrawlingFinishedInputModel(
-                task_id=body.task_id, errors=errors
-            ).model_dump_json()
-        ),
-    )
+    # return analytics_client.crawling_finished(
+    #    token,
+    #    json.loads(
+    #        CrawlingFinishedInputModel(
+    #            task_id=body.task_id, errors=errors
+    #        ).model_dump_json()
+    #    ),
+    # )
 
 
 @app.post(

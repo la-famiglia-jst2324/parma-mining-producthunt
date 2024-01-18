@@ -92,7 +92,7 @@ class AnalyticsClient:
 
     def feed_raw_data(self, token: str, input_data: ResponseModel):
         """Feed the raw data to the analytics service."""
-        organization_json = json.loads(input_data.raw_data.updated_model_dump())
+        organization_json = json.loads(input_data.raw_data.model_dump_json())
 
         data = {
             "source_name": input_data.source_name,

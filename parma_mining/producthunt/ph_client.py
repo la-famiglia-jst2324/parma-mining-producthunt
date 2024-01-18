@@ -60,7 +60,7 @@ def _extract_followers(soup: BeautifulSoup) -> int:
     return 0
 
 
-class ProductHuntScraper:
+class ProductHuntClient:
     """ProductHuntScraper class is used to fetch data from Product Hunt."""
 
     def __init__(self):
@@ -89,7 +89,7 @@ class ProductHuntScraper:
 
                 if product_link and product_link["href"].startswith("/products/"):
                     full_url = self.base_url.rstrip("/") + product_link["href"]
-                    products.append({"name": product_name, "url": full_url})
+                    products.append({"name": product_name, "producthunt_url": full_url})
 
                     if len(products) >= product_cut_off:
                         break

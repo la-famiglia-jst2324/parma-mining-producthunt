@@ -1,5 +1,4 @@
 """Model for the ProductHunt data."""
-import json
 from datetime import datetime
 
 from pydantic import BaseModel
@@ -22,7 +21,7 @@ class DiscoveryModel(BaseModel):
     """Model for discovery."""
 
     name: str
-    url: str
+    producthunt_url: str
 
 
 class DiscoveryResponse(BaseModel):
@@ -47,14 +46,6 @@ class ProductInfo(BaseModel):
     review_count: int = 0
     followers: int = 0
     reviews: list = []
-
-    def updated_model_dump(self) -> str:
-        """Dump the ProductInfo instance to a JSON string."""
-        json_serializable_dict = self.dict()
-
-        json_serializable_dict["reviews"] = [review.dict() for review in self.reviews]
-
-        return json.dumps(json_serializable_dict, default=str)
 
 
 class ResponseModel(BaseModel):
