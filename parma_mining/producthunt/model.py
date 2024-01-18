@@ -7,6 +7,7 @@ from pydantic import BaseModel
 class CompaniesRequest(BaseModel):
     """Request model."""
 
+    task_id: int
     companies: dict[str, dict[str, list[str]]]
 
 
