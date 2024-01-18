@@ -28,9 +28,11 @@ def client():
 def mock_producthunt_client(mocker) -> MagicMock:
     """Mocking ProductHuntClient's search_organizations method."""
     mock = mocker.patch(
-        "parma_mining.producthunt.api.main.ProductHuntScraper.search_organizations"
+        "parma_mining.producthunt.api.main.ProductHuntClient.search_organizations"
     )
-    mock.return_value = [{"name": "mock_handle", "url": "https://example.com"}]
+    mock.return_value = [
+        {"name": "mock_handle", "producthunt_url": "https://example.com"}
+    ]
     return mock
 
 
