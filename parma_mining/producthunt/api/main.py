@@ -16,6 +16,7 @@ from parma_mining.producthunt.analytics_client import AnalyticsClient
 from parma_mining.producthunt.api.dependencies.auth import authenticate
 from parma_mining.producthunt.model import (
     CompaniesRequest,
+    CrawlingFinishedInputModel,
     DiscoveryRequest,
     DiscoveryResponse,
     ErrorInfoModel,
@@ -84,7 +85,7 @@ def initialize(source_id: int, token: str = Depends(authenticate)) -> str:
     "/companies",
     status_code=status.HTTP_200_OK,
 )
-def get_company_details(body: CompaniesRequest):
+def get_company_details(body: CompaniesRequest, token: str = Depends(authenticate)):
     """Endpoint to get product data based on a dict with the respective urls."""
     errors: dict[str, ErrorInfoModel] = {}
     for company_id, company_data in body.companies.items():
@@ -107,8 +108,7 @@ def get_company_details(body: CompaniesRequest):
                     )
                     # Write data to db via endpoint in analytics backend
                     try:
-                        return data
-                        # analytics_client.feed_raw_data(token, data)
+                        analytics_client.feed_raw_data(token, data)
                     except AnalyticsError as e:
                         logger.error(
                             f"Can't send crawling data to the Analytics. Error: {e}"
@@ -119,14 +119,14 @@ def get_company_details(body: CompaniesRequest):
                     msg = f"Unsupported type error for {data_type} in {handle}"
                     logger.error(msg)
                     collect_errors(company_id, errors, ClientInvalidBodyError(msg))
-    # return analytics_client.crawling_finished(
-    #    token,
-    #    json.loads(
-    #        CrawlingFinishedInputModel(
-    #            task_id=body.task_id, errors=errors
-    #        ).model_dump_json()
-    #    ),
-    # )
+    return analytics_client.crawling_finished(
+        token,
+        json.loads(
+            CrawlingFinishedInputModel(
+                task_id=body.task_id, errors=errors
+            ).model_dump_json()
+        ),
+    )
 
 
 @app.post(
