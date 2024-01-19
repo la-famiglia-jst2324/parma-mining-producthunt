@@ -1,9 +1,9 @@
 from unittest.mock import MagicMock
 
 import pytest
+from fastapi import status
 from fastapi.testclient import TestClient
 
-from parma_mining.mining_common.const import HTTP_200, HTTP_422
 from parma_mining.mining_common.exceptions import ClientInvalidBodyError
 from parma_mining.producthunt.api.dependencies.auth import authenticate
 from parma_mining.producthunt.api.main import app
@@ -41,12 +41,12 @@ def test_discover_endpoint_success(
 ):
     """Test for successful discovery."""
     request_data = [
-        DiscoveryRequest(company_id="123", name="TestCompany").dict(),
-        DiscoveryRequest(company_id="456", name="AnotherCompany").dict(),
+        DiscoveryRequest(company_id="123", name="TestCompany").model_dump(),
+        DiscoveryRequest(company_id="456", name="AnotherCompany").model_dump(),
     ]
 
     response = client.post("/discover", json=request_data)
-    assert response.status_code == HTTP_200
+    assert response.status_code == status.HTTP_200
     assert isinstance(response.json(), dict)
     assert "identifiers" in response.json()
     assert "validity" in response.json()
@@ -62,11 +62,11 @@ def test_discover_endpoint_empty_request(client: TestClient):
 
 
 def test_discover_endpoint_invalid_format(client: TestClient):
-    """Test for an invalid request format.""" ""
+    """Test for an invalid request format."""
     invalid_request_data = {"invalid": "data"}
 
     response = client.post("/discover", json=invalid_request_data)
-    assert response.status_code == HTTP_422
+    assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
 
 
 def test_discover_non_existing_company(
@@ -80,7 +80,7 @@ def test_discover_non_existing_company(
     ]
     response = client.post("/discover", json=request_data)
 
-    assert response.status_code == HTTP_200
+    assert response.status_code == status.HTTP_200_OK
     response_data = response.json()
     assert response_data
 

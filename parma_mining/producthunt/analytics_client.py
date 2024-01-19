@@ -9,8 +9,8 @@ import urllib.parse
 
 import httpx
 from dotenv import load_dotenv
+from fastapi import status
 
-from parma_mining.mining_common.const import HTTP_200, HTTP_201
 from parma_mining.mining_common.exceptions import AnalyticsError
 from parma_mining.producthunt.model import ResponseModel
 
@@ -36,7 +36,7 @@ class AnalyticsClient:
 
         response = httpx.post(api_endpoint, json=data, headers=headers)
 
-        if response.status_code in [HTTP_200, HTTP_201]:
+        if response.status_code in [status.HTTP_200_OK, status.HTTP_201_CREATED]:
             return response.json()
         else:
             logger.error(
