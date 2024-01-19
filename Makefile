@@ -20,7 +20,7 @@ dev:
 	uvicorn parma_mining.producthunt.api:app --reload
 
 test:
-	pytest tests/
+	PYTHONPATH=. pytest tests/
 	coverage html && open htmlcov/index.html
 
 purge-db:
