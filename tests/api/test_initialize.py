@@ -30,11 +30,13 @@ def mock_analytics_client(mocker) -> MagicMock:
 
 
 def test_initialize_success(client: TestClient, mock_analytics_client: MagicMock):
+    """Test for successful initialization."""
     response = client.get("/initialize?source_id=123")
     assert response.status_code == HTTP_200
     mock_analytics_client.assert_called_once()
 
 
 def test_initialize_missing_source_id(client: TestClient):
+    """Test for missing source_id."""
     response = client.get("/initialize")
     assert response.status_code == HTTP_422
