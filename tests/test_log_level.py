@@ -3,47 +3,23 @@ import os
 from importlib import reload
 from unittest.mock import patch
 
+import pytest
 
+from parma_mining.producthunt.api import main
+
+
+@pytest.mark.parametrize(
+    "env_setting, expected_log_level",
+    [
+        ("prod", logging.INFO),
+        ("staging", logging.DEBUG),
+        ("local", logging.DEBUG),
+        ("other", logging.INFO),
+        ("", logging.INFO),
+    ],
+)
 @patch("logging.basicConfig")
-def test_logging_level_prod(mock_basic_config):
-    with patch.dict(os.environ, {"DEPLOYMENT_ENV": "prod"}):
-        import parma_mining.producthunt.api.main
-
-        reload(parma_mining.producthunt.api.main)
-        mock_basic_config.assert_called_with(level=logging.INFO)
-
-
-@patch("logging.basicConfig")
-def test_logging_level_staging(mock_basic_config):
-    with patch.dict(os.environ, {"DEPLOYMENT_ENV": "staging"}):
-        import parma_mining.producthunt.api.main
-
-        reload(parma_mining.producthunt.api.main)
-        mock_basic_config.assert_called_with(level=logging.DEBUG)
-
-
-@patch("logging.basicConfig")
-def test_logging_level_local(mock_basic_config):
-    with patch.dict(os.environ, {"DEPLOYMENT_ENV": "local"}):
-        import parma_mining.producthunt.api.main
-
-        reload(parma_mining.producthunt.api.main)
-        mock_basic_config.assert_called_with(level=logging.DEBUG)
-
-
-@patch("logging.basicConfig")
-def test_logging_level_other(mock_basic_config):
-    with patch.dict(os.environ, {"DEPLOYMENT_ENV": "other"}):
-        import parma_mining.producthunt.api.main
-
-        reload(parma_mining.producthunt.api.main)
-        mock_basic_config.assert_called_with(level=logging.INFO)
-
-
-@patch("logging.basicConfig")
-def test_logging_level_empty(mock_basic_config):
-    with patch.dict(os.environ, {"DEPLOYMENT_ENV": ""}):
-        import parma_mining.producthunt.api.main
-
-        reload(parma_mining.producthunt.api.main)
-        mock_basic_config.assert_called_with(level=logging.INFO)
+def test_logging_level(mock_basic_config, env_setting, expected_log_level):
+    with patch.dict(os.environ, {"DEPLOYMENT_ENV": env_setting}):
+        reload(main)
+        mock_basic_config.assert_called_with(level=expected_log_level)
