@@ -46,7 +46,7 @@ def test_discover_endpoint_success(
     ]
 
     response = client.post("/discover", json=request_data)
-    assert response.status_code == status.HTTP_200
+    assert response.status_code == status.HTTP_200_OK
     assert isinstance(response.json(), dict)
     assert "identifiers" in response.json()
     assert "validity" in response.json()
