@@ -34,7 +34,7 @@ class AnalyticsClient:
             "Authorization": f"Bearer {token}",
         }
 
-        response = httpx.post(api_endpoint, json=data, headers=headers)
+        response = httpx.post(api_endpoint, json=data, headers=headers, timeout=120)
 
         if response.status_code in [status.HTTP_200_OK, status.HTTP_201_CREATED]:
             return response.json()
