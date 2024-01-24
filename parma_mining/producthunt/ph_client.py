@@ -75,7 +75,7 @@ class ProductHuntClient:
 
         try:
             with httpx.Client() as client:
-                response = client.get(search_url, params=params)
+                response = client.get(search_url, params=params, timeout=30)
 
             soup = BeautifulSoup(response.content, "html.parser")
 
@@ -100,7 +100,7 @@ class ProductHuntClient:
 
     def _get_html_content(self, url: str) -> str:
         with httpx.Client() as client:
-            response = client.get(url)
+            response = client.get(url, timeout=30)
         return response.content
 
     def scrape_product_page(self, url: str) -> ProductInfo:
