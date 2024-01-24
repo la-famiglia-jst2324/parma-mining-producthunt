@@ -21,14 +21,13 @@ class DiscoveryRequest(BaseModel):
 class DiscoveryModel(BaseModel):
     """Model for discovery."""
 
-    name: str
-    producthunt_url: str
+    producthunt_url: list[str] = []
 
 
 class DiscoveryResponse(BaseModel):
     """Discovery response model."""
 
-    identifiers: dict[str, list[DiscoveryModel]]
+    identifiers: dict[str, DiscoveryModel]
     validity: datetime
 
 

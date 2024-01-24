@@ -19,12 +19,12 @@ class ProductHuntNormalizationMap:
             },
             {
                 "SourceField": "review_count",
-                "DataType": "integer",
+                "DataType": "int",
                 "MeasurementName": "product review count",
             },
             {
                 "SourceField": "followers",
-                "DataType": "integer",
+                "DataType": "int",
                 "MeasurementName": "product followers count",
             },
             {
