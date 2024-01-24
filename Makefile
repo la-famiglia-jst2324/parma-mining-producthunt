@@ -17,10 +17,10 @@ install:
 	# pip install -e . # Install the project in editable mode
 
 dev:
-	uvicorn parma_mining.producthunt.api:app --reload
+	uvicorn parma_mining.producthunt.api:app --reload --port 8888
 
 test:
-	pytest tests/
+	PYTHONPATH=. pytest tests/
 	coverage html && open htmlcov/index.html
 
 purge-db:

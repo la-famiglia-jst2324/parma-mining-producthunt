@@ -20,6 +20,7 @@ def mock_response(content):
 
 
 def test_scrape_product_page_failure():
+    """Test for a failed request."""
     with patch("httpx.Client.get", side_effect=Exception("Mocked Exception")):
         scraper = ProductHuntClient()
         result = scraper.scrape_product_page(
