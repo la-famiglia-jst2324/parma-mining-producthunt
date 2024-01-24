@@ -17,7 +17,7 @@ install:
 	# pip install -e . # Install the project in editable mode
 
 dev:
-	uvicorn parma_mining.producthunt.api:app --reload --port 8888
+	uvicorn parma_mining.producthunt.api:app --reload
 
 test:
 	PYTHONPATH=. pytest tests/
