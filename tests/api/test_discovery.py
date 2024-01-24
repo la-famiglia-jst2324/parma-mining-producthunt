@@ -30,9 +30,7 @@ def mock_producthunt_client(mocker) -> MagicMock:
     mock = mocker.patch(
         "parma_mining.producthunt.api.main.ProductHuntClient.search_organizations"
     )
-    mock.return_value = [
-        {"name": "mock_handle", "producthunt_url": "https://example.com"}
-    ]
+    mock.return_value = {"producthunt_url": ["https://example.com"]}
     return mock
 
 
@@ -73,7 +71,7 @@ def test_discover_non_existing_company(
     client: TestClient, mock_producthunt_client: MagicMock
 ):
     """Test for discovering a non-existing company."""
-    mock_producthunt_client.return_value = []
+    mock_producthunt_client.return_value = {}
 
     request_data = [
         DiscoveryRequest(company_id="999", name="NonExistingCompany").dict()

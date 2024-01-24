@@ -6,7 +6,7 @@ from datetime import datetime
 import httpx
 from bs4 import BeautifulSoup
 
-from parma_mining.producthunt.model import ProductInfo
+from parma_mining.producthunt.model import DiscoveryModel, ProductInfo
 
 
 def _extract_product_name(soup: BeautifulSoup) -> str | None:
@@ -68,7 +68,7 @@ class ProductHuntClient:
         self.base_url = "https://www.producthunt.com/"
         self.logger = logging.getLogger(__name__)
 
-    def search_organizations(self, company_name: str) -> list:
+    def search_organizations(self, company_name: str) -> DiscoveryModel:
         """Get links of products by company name."""
         search_url = self.base_url + "search"
         params = {"q": company_name}
@@ -79,25 +79,24 @@ class ProductHuntClient:
 
             soup = BeautifulSoup(response.content, "html.parser")
 
-            products = []
+            products: dict = {"producthunt_url": []}
             product_cut_off = 1
             product_name_divs = soup.find_all("div", {"data-test": "product-item-name"})
 
             for div in product_name_divs:
-                product_name = div.get_text(strip=True)
                 product_link = div.find_previous("a", href=True)
 
                 if product_link and product_link["href"].startswith("/products/"):
                     full_url = self.base_url.rstrip("/") + product_link["href"]
-                    products.append({"name": product_name, "producthunt_url": full_url})
+                    products["producthunt_url"].append(full_url)
 
                     if len(products) >= product_cut_off:
                         break
 
-            return products
+            return DiscoveryModel.model_validate(products)
         except Exception as e:
             self.logger.error(f"Failed to query company products: {e}")
-            return []
+            return DiscoveryModel()
 
     def _get_html_content(self, url: str) -> str:
         with httpx.Client() as client:
