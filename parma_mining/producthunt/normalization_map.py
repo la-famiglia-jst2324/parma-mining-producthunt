@@ -34,7 +34,7 @@ class ProductHuntNormalizationMap:
                 "NestedMappings": [
                     {
                         "SourceField": "text",
-                        "DataType": "text",
+                        "DataType": "comment",
                         "MeasurementName": "review text",
                     },
                     {
