@@ -5,7 +5,7 @@
 [![Deploy](https://github.com/la-famiglia-jst2324/parma-mining-producthunt/actions/workflows/release.yml/badge.svg)](https://github.com/la-famiglia-jst2324/parma-mining-producthunt/actions/workflows/release.yml)
 [![Major Tag](https://github.com/la-famiglia-jst2324/parma-mining-producthunt/actions/workflows/tag-major.yml/badge.svg)](https://github.com/la-famiglia-jst2324/parma-mining-producthunt/actions/workflows/tag-major.yml)
 
-ParmaAI mining module for the producthunt CRM.
+ParmaAI mining module for producthunt. This module collects data from Producthunt by scraping the website and provides the data to Parma Analytics.
 
 ## Getting Started
 
@@ -80,6 +80,7 @@ The following steps will get you started with the project.
 .
 ├── parma_mining.producthunt: Main sourcing code
 │   └── api: FastAPI REST API
+│   └── mining_common: Collection of common classes to be used in the repo.
 ├─ tests: Tests for mining module
 ├── Makefile: Recipes for easy simplified setup and local development
 ├── README.md
@@ -97,12 +98,96 @@ Core libraries that this project uses:
 - [Typer](https://typer.tiangolo.com/): Typer is a library for building CLI applications that users will love using and developers will love creating.
 - [Polars](https://pola.rs): Polars is a blazingly fast data processing library written in Rust. It has a DataFrame API that is similar to Pandas and a Series API that is similar to NumPy.
 - [Pytest](https://docs.pytest.org/en/6.2.x/): The pytest framework makes it easy to write small tests, yet scales to support complex functional testing for applications and libraries.
+- [Python-Jose](https://python-jose.readthedocs.io/en/latest/): The JavaScript Object Signing and Encryption (JOSE) technologies collectively can be used to encrypt and/or sign content using a variety of algorithms.
+- [HTTPX](https://www.python-httpx.org/): HTTPX is a fully featured HTTP client for Python 3, which provides sync and async APIs, and support for both HTTP/1.1 and HTTP/2.
+- [Beautiful Soup](https://beautiful-soup-4.readthedocs.io/en/latest/): Beautiful Soup is a Python library for pulling data out of HTML and XML files.
 
 ## Deployment
 
-No deployment pipeline has been set up yet.
+The deployment of Parma Mining Modules are managed through a combination of Terraform for infrastructure management and GitHub Actions for continuous integration and delivery. Our deployment strategy ensures that our application is consistently deployed across different environments with high reliability and minimal manual intervention.
 
-Currently we are considering several backend frameworks like `Firebase`, `Supabase` or `AWS Amplify`.
+### Infrastructure as Code with Terraform
+
+We use Terraform for defining, provisioning, and managing the cloud infrastructure required for Parma Mining Modules. Our Terraform configuration files are organized under the `terraform` directory, divided into different environments like staging (`staging`), and production (`prod`). Each environment has its own set of configurations and variables, ensuring isolation and control over different deployment stages.
+
+A pivotal aspect of our Terraform strategy is the use of a common module, which is housed in the `module` directory. This module encompasses the core infrastructure components that are shared across all environments. The utilization of a shared module ensures consistency and streamlines our infrastructure management.
+
+Each environment, staging and production, references this common `module` but with its own set of environment-specific configurations and variables. This structure ensures that each environment, while based on a common foundation, is independently configurable and isolated, thus providing precise control over the deployment in various stages.
+
+The application is containerized and deployed to **Google Cloud Run**, providing a scalable and serverless environment for running our APIs. This is defined in `service.tf`.
+
+### Continuous Deployment with GitHub Actions
+
+Our GitHub Actions workflow, defined in `.github/workflows/deploy.yml`, automates the deployment process. The workflow is triggered on pushes to the main branch and on published releases. It encompasses steps for:
+
+- Setting up the Google Cloud CLI and authenticating with Google Cloud services.
+- Building and pushing Docker images to Google Container Registry.
+- Executing Terraform commands (`init`, `plan`, `apply`) to deploy the infrastructure and services as per the Terraform configurations.
+- Environment-specific variables and secrets (like database passwords, API keys, etc.) are securely managed through GitHub Secrets and are injected into the deployment process as needed.
+
+### Deployment Environments
+
+We maintain two primary environments for our application:
+
+- Staging (staging): A pre-production environment that closely resembles the production setup, used for final testing before a release.
+- Production (prod): The live environment where our application is available to end-users.
+
+## Module Interface
+
+### **Endpoint 1: Initialize**
+
+**Path: `/initialize`**
+
+**Method: GET**
+
+**Description:**
+This endpoint initializes the module, that will be done during the handshake with Parma Analytics. It introduces data format to analytics. This process includes registering the measurements which are defined in the normalization map.
+
+**Input:**
+
+- **Type**: integer
+- **Content**: Source id of the module
+
+**Output:**
+
+- **Type**: JSON response
+- **Content**: Frequency of module and the normalization map of the data format.
+
+### **Endpoint 2: Discovery**
+
+**Path: `/discover`**
+
+**Method: POST**
+
+**Description:**
+This endpoint allows clients to search for identifiers based on a query string. It is designed to facilitate the discovery of organizations, domains, channels etc. by keyword. For this module, this endpoint takes name of the company as parameter and returns the Linkedin profile url of the company.
+
+**Input:**
+
+- **Type**: JSON body
+- **Content**: A dict containing company ids and names.
+
+**Output:**
+
+- **Type**: JSON response
+- **Content**: An object that contains information about an organization/domain/etc. that matches the search query.
+
+### **Endpoint 3: Get Company Details**
+
+**Path: `/companies`**
+
+**Method: POST**
+
+**Description:**
+This endpoint retrieves detailed information about a list of companies using their unique IDs and feed the collected raw data to analytics backend.
+
+**Input:**
+
+- **Type**: JSON body
+- **Content**: A dictionary of companies and relative handles for these companies.
+
+**Output:**
+HTTP status OK
 
 ## Disclaimer
 
