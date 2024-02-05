@@ -102,6 +102,29 @@ Core libraries that this project uses:
 - [HTTPX](https://www.python-httpx.org/): HTTPX is a fully featured HTTP client for Python 3, which provides sync and async APIs, and support for both HTTP/1.1 and HTTP/2.
 - [Beautiful Soup](https://beautiful-soup-4.readthedocs.io/en/latest/): Beautiful Soup is a Python library for pulling data out of HTML and XML files.
 
+## Deployment
+
+The deployment of Parma Mining Modules are managed through a combination of Terraform for infrastructure management and GitHub Actions for continuous integration and delivery. Our deployment strategy ensures that our application is consistently deployed across different environments with high reliability and minimal manual intervention.
+
+### Infrastructure as Code with Terraform
+
+We use Terraform for defining, provisioning, and managing the cloud infrastructure required for Parma Mining Modules. Our Terraform configuration files are organized under the `terraform` directory, divided into different environments like staging (`staging`), and production (`prod`). Each environment has its own set of configurations and variables, ensuring isolation and control over different deployment stages.
+
+A pivotal aspect of our Terraform strategy is the use of a common module, which is housed in the `module` directory. This module encompasses the core infrastructure components that are shared across all environments. The utilization of a shared module ensures consistency and streamlines our infrastructure management.
+
+Each environment, staging and production, references this common `module` but with its own set of environment-specific configurations and variables. This structure ensures that each environment, while based on a common foundation, is independently configurable and isolated, thus providing precise control over the deployment in various stages.
+
+The application is containerized and deployed to **Google Cloud Run**, providing a scalable and serverless environment for running our APIs. This is defined in `service.tf`.
+
+### Continuous Deployment with GitHub Actions
+
+Our GitHub Actions workflow, defined in `.github/workflows/deploy.yml`, automates the deployment process. The workflow is triggered on pushes to the main branch and on published releases. It encompasses steps for:
+
+- Setting up the Google Cloud CLI and authenticating with Google Cloud services.
+- Building and pushing Docker images to Google Container Registry.
+- Executing Terraform commands (`init`, `plan`, `apply`) to deploy the infrastructure and services as per the Terraform configurations.
+- Environment-specific variables and secrets (like database passwords, API keys, etc.) are securely managed through GitHub Secrets and are injected into the deployment process as needed.
+
 ### Deployment Environments
 
 We maintain two primary environments for our application:
